@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Virtuose Gaming — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --bg:#0E0E0C;--surface:#161614;--surface2:#1E1E1B;--surface3:#252521;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#F0EEE6;--text2:#9A9890;--text3:#5C5B56;
+  --accent:#C8F060;--red:#FF5C5C;--red-bg:rgba(255,92,92,0.1);
+  --amber:#F5A623;--amber-bg:rgba(245,166,35,0.1);
+  --blue:#5BA4F5;--blue-bg:rgba(91,164,245,0.1);
+  --teal:#3DD68C;--teal-bg:rgba(61,214,140,0.08);
+  --font:'DM Sans',system-ui,sans-serif;--mono:'DM Mono',monospace;
+  --r:10px;--r-sm:6px;--r-lg:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;display:flex;flex-direction:column}
+.header{height:52px;background:var(--surface);border-bottom:0.5px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;z-index:10}
+.logo{font-size:13px;font-weight:500;color:var(--text)}.logo em{color:var(--accent);font-style:normal}
+.sync{font-size:11px;font-family:var(--mono);display:flex;align-items:center;gap:5px}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dot.ok{background:var(--teal)}.dot.load{background:var(--amber);animation:pulse 1s infinite}.dot.err{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.tabs{display:flex;gap:2px;background:var(--surface2);border-radius:var(--r-sm);padding:3px;margin-left:auto}
+.tab{font-size:12px;padding:5px 11px;border-radius:5px;cursor:pointer;color:var(--text2);border:none;background:none;font-family:var(--font);transition:all .15s;white-space:nowrap}
+.tab.active{background:var(--surface3);color:var(--text);font-weight:500}
+.tab:hover:not(.active){color:var(--text)}
+.rbtn{background:var(--surface2);border:0.5px solid var(--border2);border-radius:var(--r-sm);padding:5px 10px;color:var(--text2);font-size:12px;cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:5px}
+.rbtn:hover{color:var(--text)}
+.body{flex:1;overflow:hidden}
+.page{display:none;height:100%;overflow-y:auto;padding:18px}
+.page.active{display:block}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.g6{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:12px}
+.card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--r-lg);padding:14px;margin-bottom:12px}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.ct{font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.07em}
+.kpi{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--r);padding:12px}
+.kl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.kv{font-size:21px;font-weight:300;color:var(--text);line-height:1;font-family:var(--mono);letter-spacing:-.02em}
+.kv .u{font-size:10px;color:var(--text3);margin-left:2px}
+.ks{font-size:10px;color:var(--text3);margin-top:5px}
+.kt{font-size:11px;font-weight:500;margin-top:4px}
+.up{color:var(--accent)}.dn{color:var(--red)}.nt{color:var(--amber)}
+.pw{margin-bottom:10px}
+.ph{display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:4px}
+.pt{background:var(--surface3);border-radius:99px;height:5px;overflow:hidden}
+.pf{height:100%;border-radius:99px;transition:width .6s ease}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);padding:6px 8px;text-align:left;border-bottom:0.5px solid var(--border)}
+.tbl td{padding:8px 8px;border-bottom:0.5px solid var(--border);color:var(--text2);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl .val{font-weight:500;color:var(--text);font-family:var(--mono);font-size:11px}
+.tbl .pos{color:var(--accent);font-weight:500;font-family:var(--mono);font-size:11px}
+.tbl .neg{color:var(--red);font-weight:500;font-family:var(--mono);font-size:11px}
+.tbl tr:hover td{background:var(--surface2)}
+.alert{border-radius:var(--r-sm);padding:10px 12px;margin-bottom:10px;font-size:12px;display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.alert i{font-size:15px;flex-shrink:0;margin-top:1px}
+.ag{background:var(--teal-bg);color:var(--teal);border:0.5px solid rgba(61,214,140,0.2)}
+.ar{background:var(--red-bg);color:var(--red);border:0.5px solid rgba(255,92,92,0.2)}
+.aa{background:var(--amber-bg);color:var(--amber);border:0.5px solid rgba(245,166,35,0.2)}
+.sess{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border)}
+.sess:last-child{border-bottom:none}
+.sav{width:30px;height:30px;border-radius:50%;background:var(--surface3);color:var(--text2);font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--mono)}
+.si{flex:1;min-width:0}
+.sn{font-size:13px;font-weight:500;color:var(--text)}
+.sd{font-size:11px;color:var(--text3);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sp{font-size:14px;font-weight:500;color:var(--accent);font-family:var(--mono);text-align:right;white-space:nowrap}
+.sem-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.sem{border-radius:var(--r);padding:12px;text-align:center;border:0.5px solid}
+.sv{font-size:20px;font-weight:300;font-family:var(--mono)}
+.sl{font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
+.sg{background:var(--teal-bg);border-color:rgba(61,214,140,.2)}.sg .sv,.sg .sl{color:var(--teal)}
+.sa{background:var(--amber-bg);border-color:rgba(245,166,35,.2)}.sa .sv,.sa .sl{color:var(--amber)}
+.sr{background:var(--red-bg);border-color:rgba(255,92,92,.2)}.sr .sv,.sr .sl{color:var(--red)}
+.badge{font-size:10px;padding:3px 8px;border-radius:99px;font-weight:500;font-family:var(--mono)}
+.bdg{background:var(--teal-bg);color:var(--teal)}.bdr{background:var(--red-bg);color:var(--red)}
+.bda{background:var(--amber-bg);color:var(--amber)}.bdb{background:var(--blue-bg);color:var(--blue)}
+.cr{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border)}
+.cr:last-child{border-bottom:none}
+.cav{width:28px;height:28px;border-radius:50%;background:var(--surface3);color:var(--text2);font-size:10px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--mono)}
+.cbw{flex:1;min-width:0}
+.cn{font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px}
+.cbt{background:var(--surface3);border-radius:99px;height:3px;overflow:hidden}
+.cbf{height:100%;border-radius:99px;background:var(--accent)}
+.cc{font-size:12px;font-weight:500;color:var(--text);font-family:var(--mono);text-align:right;min-width:75px;white-space:nowrap}
+.csub{font-size:10px;color:var(--text3)}
+.cw{position:relative;width:100%}
+.load{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;gap:14px}
+.load.hidden{display:none}
+.spin{width:28px;height:28px;border:2px solid var(--surface3);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ltxt{font-size:12px;color:var(--text2);font-family:var(--mono)}
+.note{font-size:11px;color:var(--text3);padding:10px 12px;background:var(--surface2);border-radius:var(--r-sm);margin-bottom:12px}
+@media(max-width:640px){
+  .g4,.g6{grid-template-columns:repeat(2,1fr)}
+  .g2,.g3{grid-template-columns:1fr}
+  .sem-grid{grid-template-columns:repeat(2,1fr)}
+  .tabs .tab{padding:5px 7px;font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<div class="load" id="lo">
+  <div class="spin"></div>
+  <div class="ltxt" id="loadTxt">Connexion au Sheet...</div>
+</div>
+
+<header class="header">
+  <span class="logo"><em>VG</em> Virtuose Gaming</span>
+  <div class="sync">
+    <div class="dot load" id="sd"></div>
+    <span id="sl" style="color:var(--text3)">Chargement...</span>
+  </div>
+  <button class="rbtn" onclick="loadData(true)" aria-label="Actualiser">
+    <i class="ti ti-refresh" aria-hidden="true"></i> Actualiser
+  </button>
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('today')" id="tab-today"><i class="ti ti-home" aria-hidden="true"></i> Aujourd'hui</button>
+    <button class="tab" onclick="showTab('mensuel')" id="tab-mensuel"><i class="ti ti-chart-bar" aria-hidden="true"></i> Mensuel</button>
+    <button class="tab" onclick="showTab('clients')" id="tab-clients"><i class="ti ti-users" aria-hidden="true"></i> Clients</button>
+    <button class="tab" onclick="showTab('pl')" id="tab-pl"><i class="ti ti-receipt" aria-hidden="true"></i> P&amp;L</button>
+  </div>
+</header>
+
+<div class="body">
+
+<!-- AUJOURD'HUI -->
+<div class="page active" id="page-today">
+  <div id="az"></div>
+  <div class="g6" id="kt"></div>
+  <div class="card">
+    <div class="ch"><span class="ct">Progression mensuelle</span><span id="pml" style="font-size:11px;color:var(--text3)"></span></div>
+    <div class="pw">
+      <div class="ph"><span>Objectif 154 000 FCFA</span><span id="po" style="font-family:var(--mono)">0%</span></div>
+      <div class="pt"><div class="pf" id="pof" style="width:0%;background:var(--accent)"></div></div>
+    </div>
+    <div class="pw" style="margin-bottom:0">
+      <div class="ph"><span>Seuil rentabilité 104 300 FCFA</span><span id="ps" style="font-family:var(--mono)">0%</span></div>
+      <div class="pt"><div class="pf" id="psf" style="width:0%;background:var(--amber)"></div></div>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><span class="ct">Sessions du jour</span><span id="tsc" class="badge bdb">0</span></div>
+      <div id="tl"><p style="font-size:12px;color:var(--text3);text-align:center;padding:20px 0">Chargement...</p></div>
+    </div>
+    <div class="card">
+      <div class="ch"><span class="ct">7 derniers jours</span></div>
+      <div class="cw" style="height:155px"><canvas id="wc" role="img" aria-label="CA 7 derniers jours"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="ct">Indicateurs clés</span></div>
+    <div class="sem-grid" id="sg"></div>
+  </div>
+</div>
+
+<!-- MENSUEL -->
+<div class="page" id="page-mensuel">
+  <div class="g4" id="km"></div>
+  <div class="card">
+    <div class="ch">
+      <span class="ct">CA mensuel vs charges réelles</span>
+      <div style="display:flex;gap:10px;font-size:11px;color:var(--text3)">
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;border-radius:2px;background:var(--accent);display:inline-block"></span>Rentable</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;border-radius:2px;background:var(--red);display:inline-block"></span>Déficit</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:16px;height:2px;background:var(--amber);display:inline-block;border-radius:1px"></span>Charges</span>
+      </div>
+    </div>
+    <div class="cw" style="height:230px"><canvas id="mc" role="img" aria-label="CA mensuel vs charges"></canvas></div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><span class="ct">CA moyen par jour</span></div>
+      <div class="cw" style="height:180px"><canvas id="dc" role="img" aria-label="CA par jour de semaine"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ch"><span class="ct">CA par console</span></div>
+      <div class="cw" style="height:180px"><canvas id="cc" role="img" aria-label="CA par console"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="ct">CA par jeu</span></div>
+    <div class="cw" style="height:190px"><canvas id="jc" role="img" aria-label="CA par jeu"></canvas></div>
+  </div>
+</div>
+
+<!-- CLIENTS -->
+<div class="page" id="page-clients">
+  <div class="g4" id="kcl"></div>
+  <div class="g2">
+    <div class="card">
+      <div class="ch"><span class="ct">Top clients</span><span style="font-size:11px;color:var(--text3)">données Sheet en direct</span></div>
+      <div id="tcl"><p style="font-size:12px;color:var(--text3);text-align:center;padding:20px 0">Chargement...</p></div>
+    </div>
+    <div class="card">
+      <div class="ch"><span class="ct">Top jeux</span></div>
+      <div id="tjl"><p style="font-size:12px;color:var(--text3);text-align:center;padding:20px 0">Chargement...</p></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="ct">Alertes stratégiques</span></div>
+    <div class="alert aa"><i class="ti ti-alert-triangle" aria-hidden="true"></i><div>FC24+FC25 représentent <strong>~90% du CA</strong>. Dépendance extrême au football. Diversifier avec soirées GTA/Naruto.</div></div>
+    <div class="alert aa"><i class="ti ti-users" aria-hidden="true"></i><div>Le top 5 clients concentre <strong>~21% du CA</strong>. Si 2–3 partent, l'impact est immédiat. Activer un programme de fidélité.</div></div>
+    <div class="alert ag"><i class="ti ti-device-gamepad-2" aria-hidden="true"></i><div>Le PSVR est sous-exploité. Objectif : <strong>2 sessions VR/jour</strong> = +32 000 FCFA/mois supplémentaires.</div></div>
+  </div>
+</div>
+
+<!-- P&L -->
+<div class="page" id="page-pl">
+  <div class="g4" id="kpl"></div>
+  <div class="card">
+    <div class="ch">
+      <span class="ct">Résultat net mensuel</span>
+      <div style="display:flex;gap:10px;font-size:11px;color:var(--text3)">
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;border-radius:2px;background:var(--accent);display:inline-block"></span>Profit</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;border-radius:2px;background:var(--red);display:inline-block"></span>Perte</span>
+      </div>
+    </div>
+    <div class="cw" style="height:210px"><canvas id="plc" role="img" aria-label="Résultat net mensuel"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="ct">Tableau P&amp;L détaillé</span></div>
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Mois</th><th>CA</th><th>Charges</th><th>Résultat</th><th>Marge</th><th>% Seuil</th><th>Statut</th></tr></thead>
+        <tbody id="plt"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="ct">Structure de charges actuelles</span></div>
+    <table class="tbl">
+      <thead><tr><th>Poste</th><th>Montant/mois</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td>Salaire gérant</td><td class="val">55 000 FCFA</td><td style="color:var(--text3);font-size:11px">depuis avril 2026</td></tr>
+        <tr><td>Électricité</td><td class="val">~31 250 FCFA</td><td style="color:var(--text3);font-size:11px">55–70k / 2 mois</td></tr>
+        <tr><td>Internet</td><td class="val">15 050 FCFA</td><td style="color:var(--text3);font-size:11px">fixe</td></tr>
+        <tr><td>Maintenance</td><td class="val">&lt; 5 000 FCFA</td><td style="color:var(--text3);font-size:11px">hors exceptionnel</td></tr>
+        <tr><td>Loyer</td><td class="val" style="color:var(--accent)">0 FCFA</td><td style="color:var(--text3);font-size:11px">bâtiment familial ✓</td></tr>
+        <tr style="background:var(--surface2)"><td style="font-weight:500;color:var(--text)">Total</td><td class="val" style="color:var(--accent)">104 300 FCFA</td><td style="color:var(--amber);font-size:11px">= seuil rentabilité</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- end body -->
+
+<script>
+// =============================================
+// URL Apps Script — connectée à ton Sheet
+// =============================================
+const API = 'https://script.google.com/macros/s/AKfycbwpmvQUGsRu2xu3pV7sTkPwLgfd4Jb0pmzn1Ol_WUtxFdup-NNf2eLFzTf_8X5_jJjD/exec';
+
+const SEUIL = 104300, OBJ = 154000;
+const CHARGES = {
+  '2024-11':0,'2024-12':125550,'2025-01':125550,'2025-02':125550,
+  '2025-03':125550,'2025-04':125550,'2025-05':125550,'2025-06':125550,
+  '2025-07':125550,'2025-08':125550,'2025-09':125550,'2025-10':125550,
+  '2025-11':94300,'2025-12':94300,'2026-01':94300,'2026-02':94300,
+  '2026-03':94300,'2026-04':104300,'2026-05':104300,'2026-06':104300,
+  '2026-07':104300,'2026-08':104300,'2026-09':104300,'2026-10':104300,
+  '2026-11':104300,'2026-12':104300,
+};
+
+const tc = 'rgba(255,255,255,0.35)', gc = 'rgba(255,255,255,0.05)';
+let CACHE = null, charts = {};
+
+function fmt(n){ return Math.round(n).toLocaleString('fr-FR'); }
+function today(){ return new Date().toISOString().split('T')[0]; }
+
+function setSync(s, l){
+  const d = document.getElementById('sd'), lb = document.getElementById('sl');
+  d.className = 'dot ' + s;
+  lb.textContent = l;
+  lb.style.color = s==='ok' ? 'var(--teal)' : s==='err' ? 'var(--red)' : 'var(--text3)';
+}
+
+function killChart(id){ if(charts[id]){ charts[id].destroy(); delete charts[id]; } }
+
+async function loadData(force){
+  if(CACHE && !force) return CACHE;
+  setSync('load', 'Synchronisation...');
+  document.getElementById('loadTxt').textContent = 'Connexion au Sheet...';
+  try {
+    const res = await fetch(API + '?action=getData&t=' + Date.now());
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    CACHE = data;
+    const n = new Date();
+    setSync('ok', 'Sync ' + String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0'));
+    document.getElementById('lo').classList.add('hidden');
+    return data;
+  } catch(e) {
+    setSync('err', 'Erreur connexion');
+    document.getElementById('lo').classList.add('hidden');
+    console.error('Erreur API:', e);
+    return null;
+  }
+}
+
+function showTab(id){
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+  const renders = { today:renderToday, mensuel:renderMensuel, clients:renderClients, pl:renderPL };
+  if(renders[id]) renders[id]();
+}
+
+// =========== AUJOURD'HUI ===========
+async function renderToday(){
+  const data = await loadData();
+  if(!data) return;
+  const { sessions } = data;
+  const d = new Date();
+  const MN = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  const DN = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const t = today(), mk = t.slice(0,7);
+
+  document.getElementById('pml').textContent = MN[d.getMonth()] + ' ' + d.getFullYear();
+
+  const ts = sessions.filter(s => s.date === t);
+  const ms = sessions.filter(s => s.date && s.date.startsWith(mk));
+  const caJ = ts.reduce((a,s) => a + (s.prix||0), 0);
+  const caM = ms.reduce((a,s) => a + (s.prix||0), 0);
+  const nbJ = ts.length, pJ = nbJ ? caJ/nbJ : 0;
+  const op = Math.min(Math.round(caM/OBJ*100), 999);
+  const sp = Math.min(Math.round(caM/SEUIL*100), 999);
+
+  document.getElementById('kt').innerHTML = `
+    <div class="kpi"><div class="kl">CA du jour</div><div class="kv">${fmt(caJ)}<span class="u">FCFA</span></div><div class="ks">${DN[d.getDay()]} ${d.getDate()} ${MN[d.getMonth()]}</div></div>
+    <div class="kpi"><div class="kl">Sessions</div><div class="kv">${nbJ}</div><div class="ks">aujourd'hui</div></div>
+    <div class="kpi"><div class="kl">Panier moyen</div><div class="kv">${nbJ ? fmt(pJ) : '—'}<span class="u">F</span></div><div class="ks">aujourd'hui</div></div>
+    <div class="kpi"><div class="kl">CA du mois</div><div class="kv">${fmt(caM)}<span class="u">FCFA</span></div><div class="ks">${ms.length} sessions</div></div>
+    <div class="kpi"><div class="kl">Vs objectif</div><div class="kv">${op}<span class="u">%</span></div><div class="ks">${fmt(OBJ)} FCFA cible</div></div>
+    <div class="kpi"><div class="kl">Vs seuil</div><div class="kv" style="color:${sp>=100?'var(--accent)':sp>=75?'var(--amber)':'var(--red)'}">${sp}<span class="u">%</span></div><div class="ks">${fmt(SEUIL)} FCFA seuil</div></div>`;
+
+  document.getElementById('po').textContent = op + '%';
+  document.getElementById('pof').style.width = Math.min(op,100) + '%';
+  document.getElementById('pof').style.background = op>=100 ? 'var(--teal)' : op>=67 ? 'var(--accent)' : 'var(--amber)';
+  document.getElementById('ps').textContent = sp + '%';
+  document.getElementById('psf').style.width = Math.min(sp,100) + '%';
+  document.getElementById('psf').style.background = sp>=100 ? 'var(--teal)' : 'var(--amber)';
+
+  const az = document.getElementById('az'); az.innerHTML = '';
+  if(caJ >= 10000) az.innerHTML += `<div class="alert ag"><i class="ti ti-thumb-up"></i><div>Bonne journée — <strong>${fmt(caJ)} FCFA</strong> pour ${nbJ} session${nbJ>1?'s':''}.</div></div>`;
+  else if(nbJ > 0 && caJ < 5000) az.innerHTML += `<div class="alert aa"><i class="ti ti-trending-down"></i><div>Journée faible — ${fmt(caJ)} FCFA. Objectif minimal : 6 500 FCFA/jour.</div></div>`;
+  else if(!nbJ) az.innerHTML += `<div class="alert aa"><i class="ti ti-pencil"></i><div>Aucune session enregistrée aujourd'hui dans le Sheet.</div></div>`;
+  if(sp < 50 && caM > 0) az.innerHTML += `<div class="alert ar" style="margin-top:6px"><i class="ti ti-flame"></i><div>Alerte rentabilité — CA du mois à <strong>${sp}%</strong> du seuil. Il manque <strong>${fmt(SEUIL-caM)} FCFA</strong>.</div></div>`;
+
+  document.getElementById('tsc').textContent = nbJ;
+  document.getElementById('tl').innerHTML = ts.length
+    ? ts.slice().reverse().map(s => `
+        <div class="sess">
+          <div class="sav">${(s.client||'?').slice(0,2).toUpperCase()}</div>
+          <div class="si"><div class="sn">${s.client||'—'}</div><div class="sd">${[s.console,s.jeu,s.formule].filter(Boolean).join(' · ')}</div></div>
+          <div class="sp">${fmt(s.prix||0)} F</div>
+        </div>`).join('')
+    : `<p style="font-size:12px;color:var(--text3);text-align:center;padding:20px 0">Aucune session aujourd'hui</p>`;
+
+  const days = [], ca7 = [];
+  for(let i=6; i>=0; i--){
+    const dd = new Date(d); dd.setDate(d.getDate()-i);
+    const ds = dd.toISOString().split('T')[0];
+    days.push(['D','L','M','M','J','V','S'][dd.getDay()]);
+    ca7.push(sessions.filter(s => s.date===ds).reduce((a,s) => a+(s.prix||0), 0));
+  }
+  killChart('w');
+  charts['w'] = new Chart(document.getElementById('wc'), {
+    type:'bar', data:{labels:days, datasets:[{data:ca7, backgroundColor:ca7.map((_,i)=>i===6?'#C8F060':'rgba(200,240,96,0.25)'), borderRadius:4, label:'CA'}]},
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{ticks:{color:tc,font:{size:10}},grid:{display:false}}, y:{ticks:{color:tc,font:{size:9},callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v},grid:{color:gc}}}}
+  });
+
+  document.getElementById('sg').innerHTML = [
+    {l:"CA/jour",v:fmt(caJ)+' F',c:caJ>=6500?'sg':caJ>=4000?'sa':'sr'},
+    {l:"Panier moyen",v:fmt(pJ||0)+' F',c:pJ>=550?'sg':pJ>=400?'sa':'sr'},
+    {l:"Sessions",v:nbJ,c:nbJ>=12?'sg':nbJ>=7?'sa':'sr'},
+    {l:"Seuil rent.",v:sp+'%',c:sp>=100?'sg':sp>=65?'sa':'sr'},
+  ].map(it => `<div class="sem ${it.c}"><div class="sv">${it.v}</div><div class="sl">${it.l}</div></div>`).join('');
+}
+
+// =========== MENSUEL ===========
+async function renderMensuel(){
+  const data = await loadData(); if(!data) return;
+  const { sessions, stats } = data;
+  const d = new Date();
+  const MN = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  const mk = today().slice(0,7);
+  const cCA = sessions.filter(s => s.date?.startsWith(mk)).reduce((a,s) => a+(s.prix||0), 0);
+
+  document.getElementById('km').innerHTML = `
+    <div class="kpi"><div class="kl">CA total Sheet</div><div class="kv">${fmt(stats.totalCA)}<span class="u">FCFA</span></div><div class="ks">${stats.totalSessions} sessions</div></div>
+    <div class="kpi"><div class="kl">${MN[d.getMonth()]} ${d.getFullYear()}</div><div class="kv">${fmt(cCA)}<span class="u">FCFA</span></div><div class="ks">mois en cours</div></div>
+    <div class="kpi"><div class="kl">Panier moyen</div><div class="kv">${fmt(stats.panierMoyen)}<span class="u">FCFA</span></div><div class="ks">par session</div></div>
+    <div class="kpi"><div class="kl">Seuil rentabilité</div><div class="kv">104 300<span class="u">FCFA</span></div><div class="ks">charges réelles</div></div>`;
+
+  const bm = stats.byMonth || {}, sm = Object.keys(bm).sort();
+  const ml = sm.map(m => { const[y,mo]=m.split('-'); return ['','Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'][+mo]+' '+y.slice(2); });
+  const mca = sm.map(m => Math.round(bm[m].ca));
+  const mch = sm.map(m => CHARGES[m] || 104300);
+
+  killChart('m');
+  charts['m'] = new Chart(document.getElementById('mc'), {
+    type:'bar', data:{labels:ml, datasets:[
+      {type:'bar',label:'CA',data:mca,backgroundColor:mca.map((v,i)=>v>=(mch[i]||104300)?'#C8F060':'#FF5C5C'),borderRadius:3,order:2},
+      {type:'line',label:'Charges',data:mch,borderColor:'#F5A623',borderWidth:1.5,pointRadius:0,fill:false,borderDash:[5,3],order:1,tension:0}
+    ]},
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{ticks:{color:tc,font:{size:8},maxRotation:45,autoSkip:false},grid:{color:gc}}, y:{ticks:{color:tc,font:{size:9},callback:v=>(v/1000).toFixed(0)+'k'},grid:{color:gc}}}}
+  });
+
+  const da = stats.dowAvg || {}, dd = [1,2,3,4,5,6,0].map(i => da[i]||0);
+  killChart('d');
+  charts['d'] = new Chart(document.getElementById('dc'), {
+    type:'bar', data:{labels:['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'], datasets:[{data:dd, backgroundColor:['#3D3D35','#3D3D35','#3D3D35','#3D3D35','#C8F060','#C8F060','#FF5C5C'], borderRadius:3, label:'CA'}]},
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{ticks:{color:tc,font:{size:10}},grid:{display:false}}, y:{ticks:{color:tc,font:{size:9},callback:v=>v>=1000?(v/1000).toFixed(1)+'k':v},grid:{color:gc}}}}
+  });
+
+  const bc = stats.byConsole || {}, cl = Object.keys(bc), cd = cl.map(k => Math.round(bc[k]));
+  killChart('c');
+  charts['c'] = new Chart(document.getElementById('cc'), {
+    type:'doughnut', data:{labels:cl, datasets:[{data:cd, backgroundColor:['#C8F060','#5BA4F5','#F5A623','#FF5C5C','#3DD68C'].slice(0,cl.length), borderWidth:0}]},
+    options:{responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{legend:{display:true, position:'bottom', labels:{color:tc,font:{size:10},boxWidth:8,padding:10}}}}
+  });
+
+  const tj = stats.topJeux || [];
+  killChart('j');
+  charts['j'] = new Chart(document.getElementById('jc'), {
+    type:'bar', data:{labels:tj.map(j=>j.name), datasets:[{data:tj.map(j=>j.ca), backgroundColor:'rgba(200,240,96,0.7)', borderRadius:3, label:'CA'}]},
+    options:{responsive:true, maintainAspectRatio:false, indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{ticks:{color:tc,font:{size:9},callback:v=>(v/1000).toFixed(0)+'k'},grid:{color:gc}}, y:{ticks:{color:tc,font:{size:11}},grid:{display:false}}}}
+  });
+}
+
+// =========== CLIENTS ===========
+async function renderClients(){
+  const data = await loadData(); if(!data) return;
+  const { stats } = data;
+  const tc2 = stats.topClients || [], tj = stats.topJeux || [], tot = stats.totalCA || 1;
+
+  document.getElementById('kcl').innerHTML = `
+    <div class="kpi"><div class="kl">Top client</div><div class="kv" style="font-size:16px">${tc2[0]?.name||'—'}</div><div class="kt up">${tc2[0]?fmt(tc2[0].ca)+' FCFA':''}</div></div>
+    <div class="kpi"><div class="kl">Panier moyen</div><div class="kv">${fmt(stats.panierMoyen)}<span class="u">FCFA</span></div><div class="ks">par session</div></div>
+    <div class="kpi"><div class="kl">Top 5 / CA total</div><div class="kv">${tc2.length>=5?Math.round(tc2.slice(0,5).reduce((a,c)=>a+c.ca,0)/tot*100):0}<span class="u">%</span></div><div class="ks">concentration</div></div>
+    <div class="kpi"><div class="kl">Clients distincts</div><div class="kv">${tc2.length}+</div><div class="ks">dans le Sheet</div></div>`;
+
+  const mx = tc2[0]?.ca || 1;
+  document.getElementById('tcl').innerHTML = tc2.map((c,i) => `
+    <div class="cr">
+      <div style="width:16px;font-size:10px;color:var(--text3);text-align:right;font-family:var(--mono)">${i+1}</div>
+      <div class="cav">${c.name.slice(0,2).toUpperCase()}</div>
+      <div class="cbw">
+        <div class="cn">${c.name}</div>
+        <div class="cbt"><div class="cbf" style="width:${Math.round(c.ca/mx*100)}%"></div></div>
+        <div class="csub">${c.sessions} sessions · moy. ${fmt(c.ca/c.sessions)} FCFA</div>
+      </div>
+      <div class="cc">${fmt(c.ca)} F</div>
+    </div>`).join('');
+
+  const mj = tj[0]?.ca || 1;
+  document.getElementById('tjl').innerHTML = tj.map((j,i) => `
+    <div class="cr">
+      <div style="width:16px;font-size:10px;color:var(--text3);text-align:right;font-family:var(--mono)">${i+1}</div>
+      <div class="cav" style="border-radius:6px;background:rgba(200,240,96,0.08);color:var(--accent)">${(j.name||'?').slice(0,2).toUpperCase()}</div>
+      <div class="cbw">
+        <div class="cn">${j.name}</div>
+        <div class="cbt"><div class="cbf" style="width:${Math.round(j.ca/mj*100)}%;background:var(--blue)"></div></div>
+        <div class="csub">${j.sessions} sessions · ${Math.round(j.ca/tot*100)}% du CA</div>
+      </div>
+      <div class="cc">${fmt(j.ca)} F</div>
+    </div>`).join('');
+}
+
+// =========== P&L ===========
+async function renderPL(){
+  const data = await loadData(); if(!data) return;
+  const bm = data.stats.byMonth || {}, months = Object.keys(bm).sort();
+  const rows = months.map(m => ({
+    m, ca: Math.round(bm[m].ca),
+    ch: CHARGES[m] || 104300,
+    res: Math.round(bm[m].ca) - (CHARGES[m] || 104300)
+  }));
+  const tot = rows.reduce((a,r) => a+r.res, 0);
+  const prof = rows.filter(r => r.res >= 0).length;
+  const best = rows.length ? rows.reduce((a,r) => r.res>a.res?r:a) : {res:0,m:'—'};
+  const worst = rows.length ? rows.reduce((a,r) => r.res<a.res?r:a) : {res:0,m:'—'};
+
+  document.getElementById('kpl').innerHTML = `
+    <div class="kpi"><div class="kl">Résultat cumulé</div><div class="kv" style="color:${tot>=0?'var(--accent)':'var(--red)'};font-size:17px">${tot>=0?'+':''}${fmt(tot)}<span class="u">FCFA</span></div><div class="ks">${months.length} mois</div></div>
+    <div class="kpi"><div class="kl">Mois rentables</div><div class="kv">${prof}<span class="u">/ ${rows.length}</span></div><div class="ks">${rows.length?Math.round(prof/rows.length*100):0}% du temps</div></div>
+    <div class="kpi"><div class="kl">Meilleur mois</div><div class="kv" style="font-size:13px;color:var(--accent)">${best.m}</div><div class="kt up">+${fmt(best.res||0)} FCFA</div></div>
+    <div class="kpi"><div class="kl">Pire mois</div><div class="kv" style="font-size:13px;color:var(--red)">${worst.m}</div><div class="kt dn">${fmt(worst.res||0)} FCFA</div></div>`;
+
+  killChart('pl');
+  charts['pl'] = new Chart(document.getElementById('plc'), {
+    type:'bar', data:{labels:rows.map(r=>r.m), datasets:[{data:rows.map(r=>r.res), backgroundColor:rows.map(r=>r.res>=0?'#C8F060':'#FF5C5C'), borderRadius:3, label:'Résultat'}]},
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{ticks:{color:tc,font:{size:8},maxRotation:45,autoSkip:false},grid:{color:gc}}, y:{ticks:{color:tc,font:{size:9},callback:v=>fmt(v)},grid:{color:gc}}}}
+  });
+
+  document.getElementById('plt').innerHTML = rows.map(r => {
+    const mg = Math.round(r.res/r.ca*100), sp = Math.round(r.ca/SEUIL*100);
+    return `<tr>
+      <td class="val">${r.m}</td>
+      <td class="val">${fmt(r.ca)}</td>
+      <td style="color:var(--text3);font-family:var(--mono);font-size:11px">${fmt(r.ch)}</td>
+      <td class="${r.res>=0?'pos':'neg'}">${r.res>=0?'+':''}${fmt(r.res)}</td>
+      <td class="${r.res>=0?'pos':'neg'}">${mg}%</td>
+      <td style="font-size:11px;font-family:var(--mono);color:${sp>=100?'var(--accent)':'var(--amber)'}">${sp}%</td>
+      <td><span class="badge ${r.res>=0?'bdg':'bdr'}">${r.res>=0?'Rentable':'Déficit'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+document.addEventListener('DOMContentLoaded', () => loadData().then(() => renderToday()));
+</script>
+</body>
+</html>
